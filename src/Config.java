@@ -1,9 +1,9 @@
-import java.sql.Time;
+import java.time.LocalTime;
 
 public class Config {
-    public static final Time[] MEAL_TIMES = new Time[] {
-        Time.valueOf("09:00:00"),
-        Time.valueOf("13:00:00"),
-        Time.valueOf("19:00:00")
+    public static final LocalTime[] MEAL_TIMES = new LocalTime[] {
+        LocalTime.of(9, 0),
+        LocalTime.of(13, 0),
+        LocalTime.of(19, 0)
     };
 }
