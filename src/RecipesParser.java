@@ -2,6 +2,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +12,7 @@ public class RecipesParser {
     public List<Recipe> recipes;
 
     public RecipesParser(Path p) throws IOException {
+        recipes = new ArrayList<>();
         List<String> lines = Files.readAllLines(p);
         for (String line : lines) {
             String[] lineSegs = line.split("\s*,\s*");
@@ -26,6 +28,7 @@ public class RecipesParser {
         Map<Duration, String> preparationSteps = new HashMap<>();
         String[] steps = s.split("\s*;\s*");
         for (String step : steps) {
+            System.out.println("Step: " + step);
             String[] stepSegs = step.split("\s*:\s*");
             assert stepSegs.length == 2;
             Duration d = Duration.parse(stepSegs[0]);

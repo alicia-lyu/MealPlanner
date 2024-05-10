@@ -40,7 +40,7 @@ public class PrepareInAdvance {
             LocalDateTime preparationTime = entry.getKey();
             List<String> steps = entry.getValue();
             for (String step : steps) {
-                String line = String.format("%s,%s\n", preparationTime.format(Agenda.FORMATTER_SHORT), step);
+                String line = String.format("%s,%s\n", preparationTime.format(Agenda.FORMATTER_WEEK), step);
                 agendaRecordOut.write(line.getBytes());
             }
         }
@@ -57,7 +57,7 @@ public class PrepareInAdvance {
             }
             List<String> steps = entry.getValue();
             for (String step : steps) {
-                String line = String.format("-[ ] %s %s\n", preparationTime.format(Agenda.FORMATTER_MIN), step);
+                String line = String.format("-[ ] %s %s\n", preparationTime.format(Agenda.FORMATTER_DAY), step);
                 calendarOut.write(line.getBytes());
             }
         }

@@ -30,10 +30,11 @@ public class ShoppingList {
     }
 
     private void parse(String line) {
+        System.out.println("ShoppingList parse line " + line);
         Pattern p = Pattern.compile("(-\\[ \\]|-\\[x\\]) (.+) for \\[(.+\\)]");
         Matcher m = p.matcher(line);
         String start = m.group(1);
-        String ingredient = m.group(1);
+        String ingredient = m.group(2);
         // String recipes = m.group(2); Not honored
         if (start.equals("-[x]")) {
             checkedOffItems.add(ingredient);

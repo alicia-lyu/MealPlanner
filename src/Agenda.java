@@ -10,7 +10,7 @@ import java.io.*;
 import static java.nio.file.StandardOpenOption.*;
 
 enum AgendaSection {
-    MEAL_PLAN("meal plan"),
+    MEALS("meals"),
     SHOPPING_LIST("shopping list"),
     PREPARE_IN_ADVANCE("prepare in advance");
 
@@ -37,8 +37,9 @@ enum AgendaSection {
  */
 public class Agenda {
     public static DateTimeFormatter FORMATTER_LONG = DateTimeFormatter.ofPattern("w--MM-dd'T'HH:mm:ss");
-    public static DateTimeFormatter FORMATTER_SHORT = DateTimeFormatter.ofPattern("E--HH:mm");
-    public static DateTimeFormatter FORMATTER_MIN = DateTimeFormatter.ofPattern("HH:mm");
+    public static DateTimeFormatter FORMATTER_DATE = DateTimeFormatter.ofPattern("w--MM-dd");
+    public static DateTimeFormatter FORMATTER_WEEK = DateTimeFormatter.ofPattern("E--HH:mm");
+    public static DateTimeFormatter FORMATTER_DAY = DateTimeFormatter.ofPattern("HH:mm");
     private MealPlan mealPlan;
     private ShoppingList shoppingList;
     private PrepareInAdvance prepareInAdvance;
@@ -58,34 +59,39 @@ public class Agenda {
         for (String line : lines) {
             line = line.toLowerCase();
             if (line.startsWith("##")) {
-                System.out.println("Processing" + line);
+                System.out.println("Processing " + line);
                 AgendaSection section = AgendaSection.getSection(line);
-                if (section == null) continue;
-                if (section != currentSection) { // process the last section
-                    List<String> clonedCurrentPart = new ArrayList<>(currentPart);
-                    switch (currentSection) {
-                        case MEAL_PLAN:
-                            mealPlan = new MealPlan(clonedCurrentPart, recipes);
-                        case SHOPPING_LIST:
-                            shoppingList = new ShoppingList(clonedCurrentPart);
-                        case PREPARE_IN_ADVANCE:
-                            prepareInAdvance = new PrepareInAdvance(clonedCurrentPart);
-                    }
-                    currentPart.clear();
-                    currentSection = section;
-                }
-            } else if (
-                line.startsWith("-[ ]") || line.startsWith("-[x]")) 
-            {
+                if (section == null)
+                    continue;
+                assert section != currentSection;
+                List<String> clonedCurrentPart = new ArrayList<>(currentPart);
+                wrapUpSection(currentSection, clonedCurrentPart);
+                currentPart.clear();
+                currentSection = section;
+            } else if (line.startsWith("-[ ]") || line.startsWith("-[x]")) {
                 currentPart.add(line);
-            } else if (
-                currentSection == AgendaSection.MEAL_PLAN && line.startsWith("|")
-            ) {
+            } else if (currentSection == AgendaSection.MEALS && line.startsWith("|")) {
                 currentPart.add(line);
             } else {
                 System.out.println("Ignored " + line);
             }
         }
+        wrapUpSection(currentSection, currentPart);
+    }
+
+    private void wrapUpSection(AgendaSection section, List<String> lines) {
+        if (section != null)
+            switch (section) {
+                case MEALS:
+                    mealPlan = new MealPlan(lines, recipes);
+                    break;
+                case SHOPPING_LIST:
+                    shoppingList = new ShoppingList(lines);
+                    break;
+                case PREPARE_IN_ADVANCE:
+                    prepareInAdvance = new PrepareInAdvance(lines);
+                    break;
+            }
     }
 
     private void updateWithMealPlan() {
@@ -109,28 +115,25 @@ public class Agenda {
         return date.plusDays(daysToNearestDay);
     }
 
-    public void output() {
+    public void output() throws IOException {
         LocalDate dateNow = LocalDate.now();
-        String postFix = dateNow.format(FORMATTER_LONG);
+        String postFix = dateNow.format(FORMATTER_DATE);
         Path calendarPath = Paths.get("out", "agenda-" + postFix + ".md");
-        try (
-            OutputStream calendarOut = new BufferedOutputStream(
-                Files.newOutputStream(calendarPath, CREATE, WRITE))
-        ) {
-            mealPlan.output(calendarOut, postFix);
-            shoppingList.output(calendarOut, postFix);
-            prepareInAdvance.output(calendarOut, postFix);
-        } catch (IOException x) {
-            System.err.println(x);
-        }
+        OutputStream calendarOut = new BufferedOutputStream(
+                Files.newOutputStream(calendarPath, CREATE, WRITE));
+        mealPlan.output(calendarOut, postFix);
+        shoppingList.output(calendarOut, postFix);
+        prepareInAdvance.output(calendarOut, postFix);
     }
 
     public static void main(String[] args) throws IOException {
         Path templatePath = Path.of("out", "template.md");
-        OutputStream templateOut = Files.newOutputStream(templatePath, CREATE, WRITE);
+        OutputStream templateOut = Files.newOutputStream(templatePath, CREATE, TRUNCATE_EXISTING, WRITE);
         templateOut.write("# Meal Plan\n\n".getBytes());
-        templateOut.write("# Meals\n\n".getBytes());
-        templateOut.write("Changes in this section will only reflect in other sections after regenerating agenda with this markdown file.\n\n".getBytes());
+        templateOut.write("## Meals\n\n".getBytes());
+        templateOut.write(
+                "Changes in this section will only reflect in other sections after regenerating agenda with this markdown file.\n\n"
+                        .getBytes());
         templateOut.write("| Day | Breakfast | Lunch | Dinner |\n".getBytes());
         templateOut.write("| --- | --------- | ----- | ------ |\n".getBytes());
         templateOut.write("| Sun |  |  |  |\n".getBytes());
@@ -139,7 +142,11 @@ public class Agenda {
         templateOut.write("| Wed |  |  |  |\n".getBytes());
         templateOut.write("| Thu |  |  |  |\n".getBytes());
         templateOut.write("| Fri |  |  |  |\n".getBytes());
-        templateOut.write("| Sat |  |  |  |\n".getBytes());
+        templateOut.write("| Sat |  |  |  |\n\n".getBytes());
+        templateOut.write("## Shopping List\n\n".getBytes());
+        templateOut.write("Changes in this section not honored except checking the boxes.\n\n".getBytes());
+        templateOut.write("## Prepare In Advance\n\n".getBytes());
+        templateOut.write("Changes in this section not honored including checking the boxes.\n\n".getBytes());
         templateOut.close();
     }
 }

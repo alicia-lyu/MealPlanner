@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import static java.nio.file.StandardOpenOption.*;
+
+import java.util.Arrays;
 import java.util.Iterator;
 
 public class MealPlan {
@@ -18,14 +20,19 @@ public class MealPlan {
 
     MealPlan(List<String> lines, List<Recipe> recipes) {
         this.recipes = recipes;
+        mealAgenda = new TreeMap<>();
+        System.out.println("MealPlan constructor with lines " + lines.toString());
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
-            String[] lineSegs = line.split("\s*\\|\s*");
+            String[] lineSegs = line.split("\\s*\\|\\s*", -1);
+            lineSegs = Arrays.copyOfRange(lineSegs, 1, lineSegs.length - 1); // Ignoring first and last empty strings
             switch (i) {
                 case 0:
                     assert lineSegs[0].equalsIgnoreCase("day");
+                    break;
                 case 1:
                     assert lineSegs[0].contains("-");
+                    break;
                 default:
                     parse(lineSegs);
             }
@@ -46,7 +53,7 @@ public class MealPlan {
                 continue;
             LocalDateTime mealDateTime = LocalDateTime.of(date, Config.MEAL_TIMES[i - 1]);
             mealAgenda.put(mealDateTime, recipe);
-            System.out.println("Added " + recipe.name + " at " + mealDateTime.format(Agenda.FORMATTER_SHORT));
+            System.out.println("Added " + recipe.name + " at " + mealDateTime.format(Agenda.FORMATTER_WEEK));
         }
     }
 
@@ -63,7 +70,7 @@ public class MealPlan {
             LocalDateTime mealDateTime = entry.getKey();
             Recipe recipe = entry.getValue();
             String line = String.format("%s,%s\n",
-                    mealDateTime.format(Agenda.FORMATTER_SHORT),
+                    mealDateTime.format(Agenda.FORMATTER_WEEK),
                     recipe.name);
             mealRecordOut.write(line.getBytes());
         }
