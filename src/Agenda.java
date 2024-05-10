@@ -10,12 +10,79 @@ import java.util.TreeMap;
 import java.io.*;
 import static java.nio.file.StandardOpenOption.*;
 
+enum Day {
+    MONDAY("monday"),
+    TUESDAY("tuesday"),
+    WEDNESDAY("wednesday"),
+    THURSDAY("thursday"),
+    FRIDAY("friday"),
+    SATURDAY("saturday"),
+    SUNDAY("sunday");
+
+    public String value;
+
+    Day(String dayOfWeek) {
+        this.value = dayOfWeek;
+    }
+
+    public static Day getDay(String dayOfWeek) {
+        for (Day day : Day.values()) {
+            if (day.value.equalsIgnoreCase(dayOfWeek)) {
+                return day;
+            }
+        }
+        throw new RuntimeException("Invalid day of the week: " + dayOfWeek);
+    }
+}
+
+enum Meal {
+    BREAKFAST("breakfast"),
+    LUNCH("lunch"),
+    DINNER("dinner");
+
+    public String value;
+
+    Meal(String meal) {
+        this.value = meal;
+    }
+
+    public static Meal getMeal(String meal) {
+        for (Meal m : Meal.values()) {
+            if (meal.equalsIgnoreCase(m.value)) {
+                return m;
+            }
+        }
+        throw new RuntimeException("Invalid meal: " + meal);
+    }
+}
+
+enum AgendaSection {
+    MEAL_PLAN("meal plan"),
+    SHOPPING_LIST("shopping list"),
+    PREPARE_IN_ADVANCE("prepare in advance");
+
+    public String value;
+
+    AgendaSection(String section) {
+        this.value = section;
+    }
+
+    public static AgendaSection getSection(String sectionInLine) {
+        sectionInLine = sectionInLine.toLowerCase();
+        for (AgendaSection s : AgendaSection.values()) {
+            if (sectionInLine.contains(s.value)) {
+                return s;
+            }
+        }
+        System.out.println("Ignored invalid section: " + sectionInLine);
+        return null;
+    }
+}
+
 /**
  * Create a weekly agenda based on
  */
 public class Agenda {
-    public static String[] DAYS = new String[] { "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday" };
-    public static String[] MEALS = new String[] { "breakfast", "lunch", "dinner" };
     public static DateTimeFormatter FORMATTER_LONG = DateTimeFormatter.ofPattern("w--MM-dd'T'HH:mm:ss");
     public static DateTimeFormatter FORMATTER_SHORT = DateTimeFormatter.ofPattern("E--HH:mm");
     public static DateTimeFormatter FORMATTER_MIN = DateTimeFormatter.ofPattern("HH:mm");
@@ -23,11 +90,13 @@ public class Agenda {
     public TreeMap<LocalDateTime, List<String>> prepareInAdvance; // 7 days // TODO: change all to localDateTime
     public TreeMap<LocalDateTime, Recipe> mealAgenda;
     private Recipe[] recipes;
-    private Map<LocalDateTime, String>[] completedSteps;
+    private Map<LocalDateTime, String> completedSteps;
+    private Map<LocalDateTime, String> newSteps;
+    private Map<LocalDateTime, String> shoppedItems;
+    private Map<LocalDateTime, String> newItems;
 
-    Agenda(Recipe[] recipes, Map<LocalDateTime, String>[] completedSteps, String weeklyPlanFileName) {
+    Agenda(Recipe[] recipes, String weeklyPlanFileName) {
         this.recipes = recipes;
-        this.completedSteps = completedSteps;
         parseWeeklyPlan(weeklyPlanFileName);
     }
 
@@ -42,7 +111,10 @@ public class Agenda {
             return;
         }
         try (
-                BufferedReader br = new BufferedReader(inputStream);) {
+            BufferedReader br = new BufferedReader(inputStream);
+        ) {
+            List<String> currentPart = new ArrayList<>();
+            AgendaSection currentSection = null;
             while (true) {
                 String line;
                 try {
@@ -55,58 +127,30 @@ public class Agenda {
                     break;
                 // Parse the line
                 line = line.toLowerCase();
-                updateAgendaWithLine(line);
+                String[] lineSegs = line.split("[\s:]");
+                if (lineSegs.length == 0) continue;
+
+                if (lineSegs[0].contains("##")) {
+                    System.out.println("Processing" + line);
+                    AgendaSection section = AgendaSection.getSection(line);
+                    if (section == null) continue;
+                    if (section != currentSection) { // process the last section
+
+                    }
+                } else if (
+                    lineSegs[0].equals("-[ ]") ||
+                    lineSegs[0].equals("-[x]")) 
+                {
+                    currentPart.add(line);
+                } else {
+                    System.out.println("Ignored " + line);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void updateAgendaWithLine(String line) {
-        LocalDate currentDate = LocalDate.now();
-        String[] parts = line.split("[\s:]");
-        // Day of the week
-        if (parts[0].equals("#")) {
-            assert parts.length == 2;
-            for (int i = 0; i < 7; i++) {
-                if (parts[1].equalsIgnoreCase(DAYS[i])) {
-                    LocalDate newDate = getDateOfNearestDay(i);
-                    if (currentDate == newDate) {
-                        throw new RuntimeException("Duplicate day of the week: " + parts[1]);
-                    }
-                    currentDate = newDate;
-                    System.out.println("Setting current day to " + DAYS[i]);
-                    break;
-                }
-            }
-            throw new RuntimeException("Invalid day of the week: " + parts[1]);
-        } else
-        // A meal
-        if (parts[0].equals("-")
-                || parts[0].equals("*")
-                || parts[0].equals("+")) {
-            Recipe recipe = null;
-            LocalTime mealTime = null;
-            for (int i = 0; i < 3; i++) {
-                if (line.contains(MEALS[i])) {
-                    String recipeString = parts[-1];
-                    mealTime = Config.MEAL_TIMES[i];
-                    LocalDateTime mealDateTime = LocalDateTime.of(currentDate, mealTime);
-                    for (Recipe r : recipes) {
-                        if (r.name.equalsIgnoreCase(recipeString)) {
-                            updateWithRecipe(mealDateTime, r);
-                            break;
-                        }
-                    }
-                }
-            }
-            if (recipe == null || mealTime == null) {
-                throw new RuntimeException("Invalid recipe from " + line);
-            }
-        } else {
-            System.out.println("Warning: Ignoring line " + line);
-        }
-    }
 
     private void updateWithRecipe(LocalDateTime mealDateTime, Recipe recipe) {
         System.out.printf("Processing recipe %s for %t", recipe.name, mealDateTime);
@@ -164,7 +208,7 @@ public class Agenda {
                     recipe.name);
                 mealRecordOut.write(line.getBytes());
             }
-            calendarOut.write("# Meal Planner\n".getBytes());
+            calendarOut.write("# Meal Plan\n".getBytes());
             calendarOut.write("## Meals\n".getBytes());
             calendarOut.write("| Day | Breakfast | Lunch | Dinner |\n".getBytes());
             calendarOut.write("| --- | --------- | ----- | ------ |\n".getBytes());
