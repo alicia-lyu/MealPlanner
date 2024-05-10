@@ -36,9 +36,9 @@ enum AgendaSection {
  * Create a weekly agenda based on
  */
 public class Agenda {
-    public static DateTimeFormatter FORMATTER_LONG = DateTimeFormatter.ofPattern("w--MM-dd'T'HH:mm:ss");
-    public static DateTimeFormatter FORMATTER_DATE = DateTimeFormatter.ofPattern("w--MM-dd");
-    public static DateTimeFormatter FORMATTER_WEEK = DateTimeFormatter.ofPattern("E--HH:mm");
+    public static DateTimeFormatter FORMATTER_LONG = DateTimeFormatter.ofPattern("'week'w_MM-dd'T'HH:mm:ss");
+    public static DateTimeFormatter FORMATTER_DATE = DateTimeFormatter.ofPattern("E, MM-dd");
+    public static DateTimeFormatter FORMATTER_WEEK = DateTimeFormatter.ofPattern("E HH:mm");
     public static DateTimeFormatter FORMATTER_DAY = DateTimeFormatter.ofPattern("HH:mm");
     private MealPlan mealPlan;
     private ShoppingList shoppingList;
@@ -116,14 +116,16 @@ public class Agenda {
     }
 
     public void output() throws IOException {
-        LocalDate dateNow = LocalDate.now();
-        String postFix = dateNow.format(FORMATTER_DATE);
+        LocalDateTime dateNow = LocalDateTime.now();
+        String postFix = dateNow.format(FORMATTER_LONG);
         Path calendarPath = Paths.get("out", "agenda-" + postFix + ".md");
+        System.out.println("Outputting to " + calendarPath);
         OutputStream calendarOut = new BufferedOutputStream(
-                Files.newOutputStream(calendarPath, CREATE, WRITE));
+                Files.newOutputStream(calendarPath, CREATE, TRUNCATE_EXISTING, WRITE));
         mealPlan.output(calendarOut, postFix);
         shoppingList.output(calendarOut, postFix);
         prepareInAdvance.output(calendarOut, postFix);
+        calendarOut.close();
     }
 
     public static void main(String[] args) throws IOException {

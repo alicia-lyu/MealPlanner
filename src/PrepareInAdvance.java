@@ -45,13 +45,13 @@ public class PrepareInAdvance {
             }
         }
         calendarOut.write("## Prepare In Advance\n\n".getBytes());
-        calendarOut.write("Changes in this section not honored including checking the boxes.\n\n".getBytes());
-        LocalDate lastDate = null;
+        calendarOut.write("Changes in this section not honored including checking the boxes.\n".getBytes());
+        LocalDate lastDate = LocalDate.MIN;
         for (Map.Entry<LocalDateTime, List<String>> entry : prepareInAdvance.entrySet()) {
             LocalDateTime preparationTime = entry.getKey();
-            if (preparationTime.toLocalDate() != lastDate) { // Start a new h3
-                String day = preparationTime.getDayOfWeek().toString();
-                String line = String.format("### %s\n", day);
+            if (preparationTime.toLocalDate().isAfter(lastDate)) { 
+                // Start a new h3
+                String line = String.format("\n### %s\n\n", preparationTime.format(Agenda.FORMATTER_DATE));
                 calendarOut.write(line.getBytes());
                 lastDate = preparationTime.toLocalDate();
             }
@@ -61,6 +61,7 @@ public class PrepareInAdvance {
                 calendarOut.write(line.getBytes());
             }
         }
+        agendaRecordOut.close();
     }
 
 }

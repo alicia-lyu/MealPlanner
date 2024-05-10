@@ -61,6 +61,26 @@ public class MealPlan {
         return mealAgenda.entrySet().iterator();
     }
 
+    private void outputDay(OutputStream calendarOut, String breakfast, String lunch, String dinner, LocalDate lastDate,
+            LocalDate thisDate)
+            throws IOException {
+        if (breakfast == null)
+            breakfast = "";
+        if (lunch == null)
+            lunch = "";
+        if (dinner == null)
+            dinner = "";
+        String line = String.format("| %s | %s | %s | %s |\n", lastDate.getDayOfWeek().toString(), breakfast, lunch,
+                dinner);
+        calendarOut.write(line.getBytes());
+        while (lastDate.plusDays(1).isBefore(thisDate)) {
+            // Fill in missing days
+            lastDate = lastDate.plusDays(1);
+            line = String.format("| %s | %s | %s | %s |\n", lastDate.getDayOfWeek().toString(), "", "", "");
+            calendarOut.write(line.getBytes());
+        }
+    }
+
     public void output(OutputStream calendarOut, String postFix) throws IOException {
         Path mealRecordPath = Paths.get("bin", "meal-" + postFix + ".csv");
         OutputStream mealRecordOut = new BufferedOutputStream(
@@ -76,6 +96,10 @@ public class MealPlan {
         }
         calendarOut.write("# Meal Plan\n\n".getBytes());
         calendarOut.write("## Meals\n\n".getBytes());
+        calendarOut.write("The week from %s to %s.\n\n".formatted(
+                mealAgenda.firstKey().format(Agenda.FORMATTER_DATE),
+                mealAgenda.firstKey().plusDays(7).format(Agenda.FORMATTER_DATE))
+                .getBytes());
         calendarOut.write(
                 "Changes in this section will only reflect in other sections after regenerating agenda with this markdown file.\n\n"
                         .getBytes());
@@ -85,20 +109,22 @@ public class MealPlan {
         String breakfast = null, lunch = null, dinner = null;
         for (Map.Entry<LocalDateTime, Recipe> entry : mealAgenda.entrySet()) {
             LocalDateTime date = entry.getKey();
-            if (date.toLocalDate() != lastDate) {
-                String day = lastDate.getDayOfWeek().toString();
-                String line = String.format("| %s | %s | %s | %s |\n", day, breakfast, lunch, dinner);
-                calendarOut.write(line.getBytes());
+            if (!date.toLocalDate().equals(lastDate)) {
+                // Wrap up the previous day
+                outputDay(calendarOut, breakfast, lunch, dinner, lastDate, date.toLocalDate());
                 lastDate = date.toLocalDate();
                 breakfast = lunch = dinner = null;
             }
-            String recipe = entry.getValue().name;
+            String recipeName = entry.getValue().name;
             if (date.getHour() < 11)
-                breakfast = recipe;
+                breakfast = recipeName;
             else if (date.getHour() < 15)
-                lunch = recipe;
+                lunch = recipeName;
             else
-                dinner = recipe;
+                dinner = recipeName;
         }
+        outputDay(calendarOut, breakfast, lunch, dinner, lastDate, mealAgenda.firstKey().toLocalDate().plusDays(7));
+        calendarOut.write("\n".getBytes());
+        mealRecordOut.close();
     }
 }

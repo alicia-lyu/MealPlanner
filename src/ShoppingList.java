@@ -64,5 +64,7 @@ public class ShoppingList {
             // TODO: use a stock file to check off
             calendarOut.write(calendarLine.getBytes());
         }
+        calendarOut.write("\n".getBytes());
+        cartRecordOut.close();
     }
 }
