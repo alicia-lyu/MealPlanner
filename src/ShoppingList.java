@@ -66,6 +66,5 @@ public class ShoppingList {
         } catch (IOException x) {
             System.err.println(x);
         }
-
     }
 }

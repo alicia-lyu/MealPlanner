@@ -152,7 +152,25 @@ public class Agenda {
     }
 
     public static void main(String[] args) throws Exception {
-        // Generate a empty template for a new agenda
-        // TODO
+        Path templatePath = Path.of("out", "template.md");
+        try (
+            OutputStream templateOut = Files.newOutputStream(templatePath, CREATE, WRITE)
+        ) {
+            templateOut.write("# Meal Plan\n\n".getBytes());
+            templateOut.write("# Meals\n\n".getBytes());
+            templateOut.write("Changes in this section will only reflect in other sections after regenerating agenda with this markdown file.\n\n".getBytes());
+            templateOut.write("| Day | Breakfast | Lunch | Dinner |\n".getBytes());
+            templateOut.write("| --- | --------- | ----- | ------ |\n".getBytes());
+            templateOut.write("| Sun | | | |\n".getBytes());
+            templateOut.write("| Mon | | | |\n".getBytes());
+            templateOut.write("| Tue | | | |\n".getBytes());
+            templateOut.write("| Wed | | | |\n".getBytes());
+            templateOut.write("| Thu | | | |\n".getBytes());
+            templateOut.write("| Fri | | | |\n".getBytes());
+            templateOut.write("| Sat | | | |\n".getBytes());
+            templateOut.close();
+        } catch (IOException x) {
+            System.err.println(x);
+        }
     }
 }
