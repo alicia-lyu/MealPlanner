@@ -27,4 +27,9 @@ It is also recommended to have the following installed:
 - Clone this repository
 - Run `make` in the root directory: This will take the pre-existing sample [`agenda.md`](./lib/agenda.md), [`recipes.csv`](./lib/recipes.csv), and [`stock.csv`](./lib/stock.csv) to generate the meal planner in the `out` directory.
 
-Build your own meal planner by modifying the sample files: [`agenda.md`](./lib/agenda.md), [`recipes.csv`](./lib/recipes.csv), and [`stock.csv`](./lib/stock.csv).
+## Build your own meal planner
+
+By modifying the sample files: [`agenda.md`](./lib/agenda.md), [`recipes.csv`](./lib/recipes.csv), and [`stock.csv`](./lib/stock.csv). Be sure to adhere to the syntax and format of the sample files strictly. The parser is not designed to handle any deviations from the sample files. 
+
+- Be aware of whitespace, line breaks, and delimiters (`,`, `|`, `:`, `;`).
+- Use [ISO-8601 duration format `PnDTnHnMn.nS`](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html#parse-java.lang.CharSequence-) to specify durations (how much time ahead) for preparation steps.
