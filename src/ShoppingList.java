@@ -60,7 +60,7 @@ public class ShoppingList {
             List<Recipe> recipes = entry.getValue();
             String recordLine = String.format("%s,'%s'\n", ingredient, recipes.toString());
             cartRecordOut.write(recordLine.getBytes());
-            String calendarLine = String.format("-[ ] %s for %s\n", ingredient, recipes.toString());
+            String calendarLine = String.format("- [ ] %s for %s\n", ingredient, recipes.toString());
             // TODO: use a stock file to check off
             calendarOut.write(calendarLine.getBytes());
         }

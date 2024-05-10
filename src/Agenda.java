@@ -68,7 +68,7 @@ public class Agenda {
                 wrapUpSection(currentSection, clonedCurrentPart);
                 currentPart.clear();
                 currentSection = section;
-            } else if (line.startsWith("-[ ]") || line.startsWith("-[x]")) {
+            } else if (line.startsWith("- [ ]") || line.startsWith("- [x]")) {
                 currentPart.add(line);
             } else if (currentSection == AgendaSection.MEALS && line.startsWith("|")) {
                 currentPart.add(line);

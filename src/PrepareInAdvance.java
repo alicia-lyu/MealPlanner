@@ -57,7 +57,7 @@ public class PrepareInAdvance {
             }
             List<String> steps = entry.getValue();
             for (String step : steps) {
-                String line = String.format("-[ ] %s %s\n", preparationTime.format(Agenda.FORMATTER_DAY), step);
+                String line = String.format("- [ ] %s %s\n", preparationTime.format(Agenda.FORMATTER_DAY), step);
                 calendarOut.write(line.getBytes());
             }
         }
