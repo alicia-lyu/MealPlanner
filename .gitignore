@@ -3,3 +3,6 @@
 /.vscode/*
 .DS_Store
 *.class
+
+!/out/agenda-week19_05-10T13:04:47.md
+!/out/template.md

@@ -48,6 +48,9 @@ public class ShoppingList {
     }
 
     private void parseStock(Path stockPath) throws IOException {
+        if (!Files.exists(stockPath)) {
+            return;
+        }
         List<String> stockLines = Files.readAllLines(stockPath);
         for (String line : stockLines) {
             line = line.strip();
