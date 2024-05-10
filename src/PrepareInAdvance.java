@@ -7,14 +7,14 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import static java.nio.file.StandardOpenOption.*;
 
 public class PrepareInAdvance {
-    public TreeMap<LocalDateTime, List<String>> prepareInAdvance;
+    public TreeMap<LocalDateTime, Map<String, Recipe>> prepareInAdvance;
 
     PrepareInAdvance(List<String> lines) {
         System.out.println("PrepareInAdvance constructor ignored lines " + lines.toString());
@@ -26,8 +26,8 @@ public class PrepareInAdvance {
             Duration d = entry.getKey();
             String s = entry.getValue();
             LocalDateTime preparationTime = mealDateTime.plus(d);
-            prepareInAdvance.putIfAbsent(preparationTime, new ArrayList<>());
-            prepareInAdvance.get(preparationTime).add(s);
+            prepareInAdvance.putIfAbsent(preparationTime, new HashMap<>());
+            prepareInAdvance.get(preparationTime).put(s, recipe);
         }
     }
 
@@ -36,28 +36,28 @@ public class PrepareInAdvance {
         OutputStream agendaRecordOut = new BufferedOutputStream(
                 Files.newOutputStream(prepareRecordPath, CREATE, WRITE));
         agendaRecordOut.write("Time,Step\n".getBytes());
-        for (Map.Entry<LocalDateTime, List<String>> entry : prepareInAdvance.entrySet()) {
-            LocalDateTime preparationTime = entry.getKey();
-            List<String> steps = entry.getValue();
-            for (String step : steps) {
-                String line = String.format("%s,%s\n", preparationTime.format(Agenda.FORMATTER_WEEK), step);
-                agendaRecordOut.write(line.getBytes());
-            }
-        }
-        calendarOut.write("## Prepare In Advance\n\n".getBytes());
-        calendarOut.write("Changes in this section not honored including checking the boxes.\n".getBytes());
+
         LocalDate lastDate = LocalDate.MIN;
-        for (Map.Entry<LocalDateTime, List<String>> entry : prepareInAdvance.entrySet()) {
+        calendarOut.write("## Prepare In Advance\n\n".getBytes());
+        calendarOut.write("Changes in this section will not be honored including checking the boxes.\n".getBytes());
+
+        for (Map.Entry<LocalDateTime, Map<String, Recipe>> entry : prepareInAdvance.entrySet()) {
             LocalDateTime preparationTime = entry.getKey();
             if (preparationTime.toLocalDate().isAfter(lastDate)) { 
                 // Start a new h3
-                String line = String.format("\n### %s\n\n", preparationTime.format(Agenda.FORMATTER_DATE));
-                calendarOut.write(line.getBytes());
+                String agendaLine = String.format("\n### %s\n\n", preparationTime.format(Agenda.FORMATTER_DATE));
+                calendarOut.write(agendaLine.getBytes());
                 lastDate = preparationTime.toLocalDate();
             }
-            List<String> steps = entry.getValue();
-            for (String step : steps) {
-                String line = String.format("- [ ] %s %s\n", preparationTime.format(Agenda.FORMATTER_DAY), step);
+
+            Map<String, Recipe> steps = entry.getValue();
+            for (Map.Entry<String, Recipe> stepEntry : steps.entrySet()) {
+                String step = stepEntry.getKey();
+                Recipe recipe = stepEntry.getValue();
+                String recordLine = String.format("%s,%s,%s\n", preparationTime.format(Agenda.FORMATTER_WEEK), step, recipe.name);
+                agendaRecordOut.write(recordLine.getBytes());
+
+                String line = String.format("- [ ] %s %s for %s\n", preparationTime.format(Agenda.FORMATTER_DAY), step, recipe.name);
                 calendarOut.write(line.getBytes());
             }
         }

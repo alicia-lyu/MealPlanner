@@ -79,7 +79,7 @@ public class Agenda {
         wrapUpSection(currentSection, currentPart);
     }
 
-    private void wrapUpSection(AgendaSection section, List<String> lines) {
+    private void wrapUpSection(AgendaSection section, List<String> lines) throws IOException {
         if (section != null)
             switch (section) {
                 case MEALS:

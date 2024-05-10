@@ -24,6 +24,10 @@ public class RecipesParser {
         }
     }
 
+    public RecipesParser() throws IOException {
+        this(Path.of("lib", "recipes.csv"));
+    }
+
     private Map<Duration, String> parsePreparationSteps(String s) {
         Map<Duration, String> preparationSteps = new HashMap<>();
         String[] steps = s.split("\s*;\s*");

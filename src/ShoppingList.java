@@ -19,14 +19,20 @@ import static java.nio.file.StandardOpenOption.*;
 public class ShoppingList {
     public Map<String, List<Recipe>> shoppingCart;
     public Set<String> checkedOffItems;
+    private static final Path DEFAULT_STOCK_PATH = Path.of("lib", "stock.csv");
 
-    ShoppingList(List<String> lines) {
+    ShoppingList(List<String> lines) throws IOException {
+        this(lines, DEFAULT_STOCK_PATH);
+    }
+
+    ShoppingList(List<String> lines, Path stockPath) throws IOException {
         shoppingCart = new HashMap<>();
         checkedOffItems = new HashSet<>();
         System.out.println("ShoppingList constructor with lines " + lines.toString());
         for (String line : lines) {
             parse(line);
         }
+        parseStock(stockPath);
     }
 
     private void parse(String line) {
@@ -38,6 +44,14 @@ public class ShoppingList {
         // String recipes = m.group(2); Not honored
         if (start.equals("-[x]")) {
             checkedOffItems.add(ingredient);
+        }
+    }
+
+    private void parseStock(Path stockPath) throws IOException {
+        List<String> stockLines = Files.readAllLines(stockPath);
+        for (String line : stockLines) {
+            line = line.strip();
+            checkedOffItems.add(line);
         }
     }
 
@@ -54,16 +68,23 @@ public class ShoppingList {
                 Files.newOutputStream(cartRecordPath, CREATE, WRITE));
         cartRecordOut.write("Ingredients\n".getBytes());
         calendarOut.write("## Shopping List\n\n".getBytes());
-        calendarOut.write("Changes in this section not honored except checking the boxes.\n\n".getBytes());
+        calendarOut.write("Changes in this section will not be honored except checking the boxes.\n\n".getBytes());
+        String bufferedCheckedItems = "";
         for (Map.Entry<String, List<Recipe>> entry : shoppingCart.entrySet()) {
             String ingredient = entry.getKey();
             List<Recipe> recipes = entry.getValue();
             String recordLine = String.format("%s,'%s'\n", ingredient, recipes.toString());
             cartRecordOut.write(recordLine.getBytes());
-            String calendarLine = String.format("- [ ] %s for %s\n", ingredient, recipes.toString());
-            // TODO: use a stock file to check off
-            calendarOut.write(calendarLine.getBytes());
+            String calendarLine;
+            if (checkedOffItems.contains(ingredient)) {
+                calendarLine = String.format("- [x] %s\n", ingredient);
+                bufferedCheckedItems += calendarLine;
+            } else {
+                calendarLine = String.format("- [ ] %s\n", ingredient);
+                calendarOut.write(calendarLine.getBytes());
+            }
         }
+        calendarOut.write(bufferedCheckedItems.getBytes());
         calendarOut.write("\n".getBytes());
         cartRecordOut.close();
     }
