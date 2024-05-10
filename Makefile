@@ -1,46 +1,75 @@
-run: ./lib/agenda.md ./bin ./out bin/App.class
-	java -cp bin App
+# Directories
+SRC_DIR = src
+BIN_DIR = bin
+OUT_DIR = out
 
-./out:
-	mkdir -p out
+# Java compiler
+JAVAC = javac
+JAVA = java
+JFLAGS = -d $(BIN_DIR) -cp $(BIN_DIR)
 
-./bin:
-	mkdir -p bin
+# Default target
+all: $(BIN_DIR)/App.class
+	$(JAVA) -cp $(BIN_DIR) App
 
-./bin/Config.class: ./bin ./out src/Config.java
-	javac -d bin -cp bin src/Config.java
+# Create bin and out directories
+$(BIN_DIR):
+	mkdir -p $(BIN_DIR)
 
-./bin/Recipe.class: ./bin ./out src/Recipe.java
-	javac -d bin -cp bin src/Recipe.java
+$(OUT_DIR):
+	mkdir -p $(OUT_DIR)
 
-./bin/Day.class: ./bin ./out src/Day.java
-	javac -d bin -cp bin src/Day.java
+# Compilation recipes
+$(BIN_DIR)/Config.class: $(SRC_DIR)/Config.java | $(BIN_DIR)
+	$(JAVAC) $(JFLAGS) $<
 
-./bin/ShoppingList.class: ./bin ./out src/ShoppingList.java bin/Recipe.class
-	javac -d bin -cp bin src/ShoppingList.java
+$(BIN_DIR)/Recipe.class: $(SRC_DIR)/Recipe.java | $(BIN_DIR)
+	$(JAVAC) $(JFLAGS) $<
 
-./bin/PrepareInAdvance.class: ./bin ./out src/PrepareInAdvance.java bin/Recipe.class bin/Config.class
-	javac -d bin -cp bin src/PrepareInAdvance.java
+$(BIN_DIR)/Day.class: $(SRC_DIR)/Day.java | $(BIN_DIR)
+	$(JAVAC) $(JFLAGS) $<
 
-./bin/RecipesParser.class: ./bin ./out src/RecipesParser.java bin/Recipe.class
-	javac -d bin -cp bin src/RecipesParser.java
+$(BIN_DIR)/ShoppingList.class: $(SRC_DIR)/ShoppingList.java $(BIN_DIR)/Recipe.class | $(BIN_DIR)
+	$(JAVAC) $(JFLAGS) $<
 
-./bin/MealPlan.class: ./bin ./out src/MealPlan.java bin/Recipe.class bin/Day.class bin/Config.class
-	javac -d bin -cp bin src/MealPlan.java
+$(BIN_DIR)/PrepareInAdvance.class: $(SRC_DIR)/PrepareInAdvance.java $(BIN_DIR)/Recipe.class $(BIN_DIR)/Config.class | $(BIN_DIR)
+	$(JAVAC) $(JFLAGS) $<
 
-./bin/Agenda.class: ./bin ./out src/Agenda.java bin/MealPlan.class bin/Recipe.class bin/ShoppingList.class bin/PrepareInAdvance.class
-	javac -d bin -cp bin src/Agenda.java
+$(BIN_DIR)/RecipesParser.class: $(SRC_DIR)/RecipesParser.java $(BIN_DIR)/Recipe.class | $(BIN_DIR)
+	$(JAVAC) $(JFLAGS) $<
 
-bin/App.class: ./bin ./out src/App.java bin/Agenda.class bin/RecipesParser.class
-	javac -d bin -cp bin src/App.java
+$(BIN_DIR)/MealPlan.class: $(SRC_DIR)/MealPlan.java $(BIN_DIR)/Recipe.class $(BIN_DIR)/Day.class $(BIN_DIR)/Config.class | $(BIN_DIR)
+	$(JAVAC) $(JFLAGS) $<
 
-template: ./out ./bin bin/Agenda.class
-	java -cp bin Agenda
+$(BIN_DIR)/Agenda.class: $(SRC_DIR)/Agenda.java $(BIN_DIR)/MealPlan.class $(BIN_DIR)/Recipe.class $(BIN_DIR)/ShoppingList.class $(BIN_DIR)/PrepareInAdvance.class | $(BIN_DIR)
+	$(JAVAC) $(JFLAGS) $<
 
+$(BIN_DIR)/App.class: $(SRC_DIR)/App.java $(BIN_DIR)/Agenda.class $(BIN_DIR)/RecipesParser.class | $(BIN_DIR)
+	$(JAVAC) $(JFLAGS) $<
+
+# Run the template application
+template: $(BIN_DIR)/Agenda.class | $(OUT_DIR)
+	$(JAVA) -cp $(BIN_DIR) Agenda
+
+# Clean up
 clean:
-	rm -rf bin/*.class
+	rm -rf $(BIN_DIR)/*.class
 
 purge: clean
-	rm -rf bin/*
-	rm -rf out/*
+	rm -rf $(BIN_DIR)/*
+	rm -rf $(OUT_DIR)/*
 
+# Help
+help:
+	@echo "Makefile for Java Application"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make [target]"
+	@echo ""
+	@echo "Targets:"
+	@echo "  all       Builds all classes"
+	@echo "  clean     Removes all compiled classes"
+	@echo "  purge     Removes all compiled classes and cleans bin and out directories"
+	@echo "  template  Runs the Agenda application"
+
+.PHONY: all clean purge help template
