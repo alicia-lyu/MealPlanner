@@ -17,4 +17,9 @@ public class Recipe {
         this.ingredients = ingredients;
         this.preparationSteps = preparationSteps;
     }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }
