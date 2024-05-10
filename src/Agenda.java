@@ -44,73 +44,47 @@ public class Agenda {
     private PrepareInAdvance prepareInAdvance;
     private List<Recipe> recipes;
 
-    Agenda(List<Recipe> recipes, String weeklyPlanFileName) {
+    Agenda(List<Recipe> recipes, Path weeklyPlanPath) throws IOException {
         this.recipes = recipes;
-        parseWeeklyPlan(weeklyPlanFileName);
+        parseWeeklyPlan(weeklyPlanPath);
         updateWithMealPlan();
     }
 
-    private void parseWeeklyPlan(String weeklyPlanFileName) {
+    private void parseWeeklyPlan(Path weeklyPlanPath) throws IOException {
         // Parse the file and populate weeklyAgenda
-        InputStreamReader inputStream;
-        try {
-            File file = new File(weeklyPlanFileName);
-            inputStream = new FileReader(file);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
-        try (
-            BufferedReader br = new BufferedReader(inputStream);
-        ) {
-            List<String> currentPart = new ArrayList<>();
-            AgendaSection currentSection = null;
-            while (true) {
-                String line;
-                try {
-                    line = br.readLine();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return;
-                }
-                if (line == null) break;
-                // Parse the line
-                line = line.toLowerCase();
-                String[] lineSegs = line.split("[\s:]");
-                if (lineSegs.length == 0) continue;
-
-                if (lineSegs[0].contains("##")) {
-                    System.out.println("Processing" + line);
-                    AgendaSection section = AgendaSection.getSection(line);
-                    if (section == null) continue;
-                    if (section != currentSection) { // process the last section
-                        List<String> clonedCurrentPart = new ArrayList<>(currentPart);
-                        switch (currentSection) {
-                            case MEAL_PLAN:
-                                mealPlan = new MealPlan(clonedCurrentPart, recipes);
-                            case SHOPPING_LIST:
-                                shoppingList = new ShoppingList(clonedCurrentPart);
-                            case PREPARE_IN_ADVANCE:
-                                prepareInAdvance = new PrepareInAdvance(clonedCurrentPart);
-                        }
-                        currentPart.clear();
-                        currentSection = section;
+        List<String> lines = Files.readAllLines(weeklyPlanPath);
+        List<String> currentPart = new ArrayList<>();
+        AgendaSection currentSection = null;
+        for (String line : lines) {
+            line = line.toLowerCase();
+            if (line.startsWith("##")) {
+                System.out.println("Processing" + line);
+                AgendaSection section = AgendaSection.getSection(line);
+                if (section == null) continue;
+                if (section != currentSection) { // process the last section
+                    List<String> clonedCurrentPart = new ArrayList<>(currentPart);
+                    switch (currentSection) {
+                        case MEAL_PLAN:
+                            mealPlan = new MealPlan(clonedCurrentPart, recipes);
+                        case SHOPPING_LIST:
+                            shoppingList = new ShoppingList(clonedCurrentPart);
+                        case PREPARE_IN_ADVANCE:
+                            prepareInAdvance = new PrepareInAdvance(clonedCurrentPart);
                     }
-                } else if (
-                    lineSegs[0].equals("-[ ]") ||
-                    lineSegs[0].equals("-[x]")) 
-                {
-                    currentPart.add(line);
-                } else if (
-                    currentSection == AgendaSection.MEAL_PLAN
-                )
-                    currentPart.add(line);
-                else {
-                    System.out.println("Ignored " + line);
+                    currentPart.clear();
+                    currentSection = section;
                 }
+            } else if (
+                line.startsWith("-[ ]") || line.startsWith("-[x]")) 
+            {
+                currentPart.add(line);
+            } else if (
+                currentSection == AgendaSection.MEAL_PLAN && line.startsWith("|")
+            ) {
+                currentPart.add(line);
+            } else {
+                System.out.println("Ignored " + line);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -151,26 +125,21 @@ public class Agenda {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws IOException {
         Path templatePath = Path.of("out", "template.md");
-        try (
-            OutputStream templateOut = Files.newOutputStream(templatePath, CREATE, WRITE)
-        ) {
-            templateOut.write("# Meal Plan\n\n".getBytes());
-            templateOut.write("# Meals\n\n".getBytes());
-            templateOut.write("Changes in this section will only reflect in other sections after regenerating agenda with this markdown file.\n\n".getBytes());
-            templateOut.write("| Day | Breakfast | Lunch | Dinner |\n".getBytes());
-            templateOut.write("| --- | --------- | ----- | ------ |\n".getBytes());
-            templateOut.write("| Sun | | | |\n".getBytes());
-            templateOut.write("| Mon | | | |\n".getBytes());
-            templateOut.write("| Tue | | | |\n".getBytes());
-            templateOut.write("| Wed | | | |\n".getBytes());
-            templateOut.write("| Thu | | | |\n".getBytes());
-            templateOut.write("| Fri | | | |\n".getBytes());
-            templateOut.write("| Sat | | | |\n".getBytes());
-            templateOut.close();
-        } catch (IOException x) {
-            System.err.println(x);
-        }
+        OutputStream templateOut = Files.newOutputStream(templatePath, CREATE, WRITE);
+        templateOut.write("# Meal Plan\n\n".getBytes());
+        templateOut.write("# Meals\n\n".getBytes());
+        templateOut.write("Changes in this section will only reflect in other sections after regenerating agenda with this markdown file.\n\n".getBytes());
+        templateOut.write("| Day | Breakfast | Lunch | Dinner |\n".getBytes());
+        templateOut.write("| --- | --------- | ----- | ------ |\n".getBytes());
+        templateOut.write("| Sun |  |  |  |\n".getBytes());
+        templateOut.write("| Mon |  |  |  |\n".getBytes());
+        templateOut.write("| Tue |  |  |  |\n".getBytes());
+        templateOut.write("| Wed |  |  |  |\n".getBytes());
+        templateOut.write("| Thu |  |  |  |\n".getBytes());
+        templateOut.write("| Fri |  |  |  |\n".getBytes());
+        templateOut.write("| Sat |  |  |  |\n".getBytes());
+        templateOut.close();
     }
 }

@@ -37,14 +37,16 @@ public class MealPlan {
         LocalDate date = Agenda.getDateOfNearestDay(day.value);
         for (int i = 1; i < lineSegs.length; i++) {
             Recipe recipe = null;
-            for (Recipe r: recipes) {
+            for (Recipe r : recipes) {
                 if (r.name.equalsIgnoreCase(lineSegs[i])) {
                     recipe = r;
                 }
             }
-            if (recipe == null) continue;
+            if (recipe == null)
+                continue;
             LocalDateTime mealDateTime = LocalDateTime.of(date, Config.MEAL_TIMES[i - 1]);
             mealAgenda.put(mealDateTime, recipe);
+            System.out.println("Added " + recipe.name + " at " + mealDateTime.format(Agenda.FORMATTER_SHORT));
         }
     }
 
@@ -52,45 +54,44 @@ public class MealPlan {
         return mealAgenda.entrySet().iterator();
     }
 
-    public void output(OutputStream calendarOut, String postFix) {
+    public void output(OutputStream calendarOut, String postFix) throws IOException {
         Path mealRecordPath = Paths.get("bin", "meal-" + postFix + ".csv");
-        try (OutputStream mealRecordOut = new BufferedOutputStream(
-                Files.newOutputStream(mealRecordPath, CREATE, WRITE))) {
-            mealRecordOut.write("Time,Recipe\n".getBytes());
-            for (Map.Entry<LocalDateTime, Recipe> entry : mealAgenda.entrySet()) {
-                LocalDateTime mealDateTime = entry.getKey();
-                Recipe recipe = entry.getValue();
-                String line = String.format("%s,%s\n",
-                        mealDateTime.format(Agenda.FORMATTER_SHORT),
-                        recipe.name);
-                mealRecordOut.write(line.getBytes());
+        OutputStream mealRecordOut = new BufferedOutputStream(
+                Files.newOutputStream(mealRecordPath, CREATE, WRITE));
+        mealRecordOut.write("Time,Recipe\n".getBytes());
+        for (Map.Entry<LocalDateTime, Recipe> entry : mealAgenda.entrySet()) {
+            LocalDateTime mealDateTime = entry.getKey();
+            Recipe recipe = entry.getValue();
+            String line = String.format("%s,%s\n",
+                    mealDateTime.format(Agenda.FORMATTER_SHORT),
+                    recipe.name);
+            mealRecordOut.write(line.getBytes());
+        }
+        calendarOut.write("# Meal Plan\n\n".getBytes());
+        calendarOut.write("## Meals\n\n".getBytes());
+        calendarOut.write(
+                "Changes in this section will only reflect in other sections after regenerating agenda with this markdown file.\n\n"
+                        .getBytes());
+        calendarOut.write("| Day | Breakfast | Lunch | Dinner |\n".getBytes());
+        calendarOut.write("| --- | --------- | ----- | ------ |\n".getBytes());
+        LocalDate lastDate = mealAgenda.firstKey().toLocalDate();
+        String breakfast = null, lunch = null, dinner = null;
+        for (Map.Entry<LocalDateTime, Recipe> entry : mealAgenda.entrySet()) {
+            LocalDateTime date = entry.getKey();
+            if (date.toLocalDate() != lastDate) {
+                String day = lastDate.getDayOfWeek().toString();
+                String line = String.format("| %s | %s | %s | %s |\n", day, breakfast, lunch, dinner);
+                calendarOut.write(line.getBytes());
+                lastDate = date.toLocalDate();
+                breakfast = lunch = dinner = null;
             }
-            calendarOut.write("# Meal Plan\n\n".getBytes());
-            calendarOut.write("## Meals\n\n".getBytes());
-            calendarOut.write("Changes in this section will only reflect in other sections after regenerating agenda with this markdown file.\n\n".getBytes());
-            calendarOut.write("| Day | Breakfast | Lunch | Dinner |\n".getBytes());
-            calendarOut.write("| --- | --------- | ----- | ------ |\n".getBytes());
-            LocalDate lastDate = mealAgenda.firstKey().toLocalDate();
-            String breakfast = null, lunch = null, dinner = null;
-            for (Map.Entry<LocalDateTime, Recipe> entry : mealAgenda.entrySet()) {
-                LocalDateTime date = entry.getKey();
-                if (date.toLocalDate() != lastDate) {
-                    String day = lastDate.getDayOfWeek().toString();
-                    String line = String.format("| %s | %s | %s | %s |\n", day, breakfast, lunch, dinner);
-                    calendarOut.write(line.getBytes());
-                    lastDate = date.toLocalDate();
-                    breakfast = lunch = dinner = null;
-                }
-                String recipe = entry.getValue().name;
-                if (date.getHour() < 11)
-                    breakfast = recipe;
-                else if (date.getHour() < 15)
-                    lunch = recipe;
-                else
-                    dinner = recipe;
-            }
-        } catch (IOException x) {
-            System.err.println(x);
+            String recipe = entry.getValue().name;
+            if (date.getHour() < 11)
+                breakfast = recipe;
+            else if (date.getHour() < 15)
+                lunch = recipe;
+            else
+                dinner = recipe;
         }
     }
 }

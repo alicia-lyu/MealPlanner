@@ -23,7 +23,8 @@ public class ShoppingList {
     ShoppingList(List<String> lines) {
         shoppingCart = new HashMap<>();
         checkedOffItems = new HashSet<>();
-        for (String line: lines) {
+        System.out.println("ShoppingList constructor with lines " + lines.toString());
+        for (String line : lines) {
             parse(line);
         }
     }
@@ -38,7 +39,7 @@ public class ShoppingList {
             checkedOffItems.add(ingredient);
         }
     }
-    
+
     public void updateWithRecipe(LocalDateTime mealDateTime, Recipe recipe) {
         for (String ingredient : recipe.ingredients) {
             shoppingCart.putIfAbsent(ingredient, new ArrayList<>()); // Will ignore duplicates
@@ -46,25 +47,21 @@ public class ShoppingList {
         }
     }
 
-    public void output(OutputStream calendarOut, String postFix) {
+    public void output(OutputStream calendarOut, String postFix) throws IOException {
         Path cartRecordPath = Paths.get("bin", "cart-" + postFix + ".csv");
-        try (OutputStream cartRecordOut = new BufferedOutputStream(
-                Files.newOutputStream(cartRecordPath, CREATE, WRITE))
-        ) {
-            cartRecordOut.write("Ingredients\n".getBytes());
-            calendarOut.write("## Shopping List\n\n".getBytes());
-            calendarOut.write("Changes in this section not honored except checking the boxes.\n\n".getBytes());
-            for (Map.Entry<String, List<Recipe>> entry : shoppingCart.entrySet()) {
-                String ingredient = entry.getKey();
-                List<Recipe> recipes = entry.getValue();
-                String recordLine = String.format("%s,'%s'\n", ingredient, recipes.toString());
-                cartRecordOut.write(recordLine.getBytes());
-                String calendarLine = String.format("-[ ] %s for %s\n", ingredient, recipes.toString()); 
-                // TODO: use a stock file to check off
-                calendarOut.write(calendarLine.getBytes());
-            }
-        } catch (IOException x) {
-            System.err.println(x);
+        OutputStream cartRecordOut = new BufferedOutputStream(
+                Files.newOutputStream(cartRecordPath, CREATE, WRITE));
+        cartRecordOut.write("Ingredients\n".getBytes());
+        calendarOut.write("## Shopping List\n\n".getBytes());
+        calendarOut.write("Changes in this section not honored except checking the boxes.\n\n".getBytes());
+        for (Map.Entry<String, List<Recipe>> entry : shoppingCart.entrySet()) {
+            String ingredient = entry.getKey();
+            List<Recipe> recipes = entry.getValue();
+            String recordLine = String.format("%s,'%s'\n", ingredient, recipes.toString());
+            cartRecordOut.write(recordLine.getBytes());
+            String calendarLine = String.format("-[ ] %s for %s\n", ingredient, recipes.toString());
+            // TODO: use a stock file to check off
+            calendarOut.write(calendarLine.getBytes());
         }
     }
 }

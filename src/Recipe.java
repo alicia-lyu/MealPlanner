@@ -11,7 +11,7 @@ import java.util.Map;
 public class Recipe {
     public final String name;
     public final List<String> ingredients;
-    public final Map<Duration, String> preparationSteps;
+    public final Map<Duration, String> preparationSteps; // Duration will be negative, denoting how long before the meal to start
     Recipe(String name, List<String> ingredients, Map<Duration, String> preparationSteps) {
         this.name = name;
         this.ingredients = ingredients;
