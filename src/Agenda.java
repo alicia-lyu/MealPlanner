@@ -36,10 +36,6 @@ enum AgendaSection {
  * Create a weekly agenda based on
  */
 public class Agenda {
-    public static DateTimeFormatter FORMATTER_LONG = DateTimeFormatter.ofPattern("'week'w_MM-dd'T'HH:mm:ss");
-    public static DateTimeFormatter FORMATTER_DATE = DateTimeFormatter.ofPattern("E, MM-dd");
-    public static DateTimeFormatter FORMATTER_WEEK = DateTimeFormatter.ofPattern("E HH:mm");
-    public static DateTimeFormatter FORMATTER_DAY = DateTimeFormatter.ofPattern("HH:mm");
     private MealPlan mealPlan;
     private ShoppingList shoppingList;
     private PrepareInAdvance prepareInAdvance;
@@ -105,19 +101,9 @@ public class Agenda {
         }
     }
 
-    public static LocalDate getDateOfNearestDay(int dayOfWeek) {
-        LocalDate date = LocalDate.now();
-        int currentDayOfWeek = date.getDayOfWeek().getValue();
-        int daysToNearestDay = dayOfWeek - currentDayOfWeek;
-        if (daysToNearestDay < 0) {
-            daysToNearestDay += 7;
-        }
-        return date.plusDays(daysToNearestDay);
-    }
-
     public void output() throws IOException {
         LocalDateTime dateNow = LocalDateTime.now();
-        String postFix = dateNow.format(FORMATTER_LONG);
+        String postFix = dateNow.format(Config.FORMATTER_LONG);
         Path calendarPath = Paths.get("out", "agenda-" + postFix + ".md");
         System.out.println("Outputting to " + calendarPath);
         OutputStream calendarOut = new BufferedOutputStream(
@@ -130,6 +116,7 @@ public class Agenda {
 
     public static void main(String[] args) throws IOException {
         Path templatePath = Path.of("out", "template.md");
+        System.out.println("Creating template at " + templatePath);
         OutputStream templateOut = Files.newOutputStream(templatePath, CREATE, TRUNCATE_EXISTING, WRITE);
         templateOut.write("# Meal Plan\n\n".getBytes());
         templateOut.write("## Meals\n\n".getBytes());

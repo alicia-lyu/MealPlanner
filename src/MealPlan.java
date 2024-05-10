@@ -41,7 +41,7 @@ public class MealPlan {
 
     private void parse(String[] lineSegs) {
         Day day = Day.getDay(lineSegs[0]);
-        LocalDate date = Agenda.getDateOfNearestDay(day.value);
+        LocalDate date = Config.getDateOfNearestDay(day.value);
         for (int i = 1; i < lineSegs.length; i++) {
             Recipe recipe = null;
             for (Recipe r : recipes) {
@@ -53,7 +53,7 @@ public class MealPlan {
                 continue;
             LocalDateTime mealDateTime = LocalDateTime.of(date, Config.MEAL_TIMES[i - 1]);
             mealAgenda.put(mealDateTime, recipe);
-            System.out.println("Added " + recipe.name + " at " + mealDateTime.format(Agenda.FORMATTER_WEEK));
+            System.out.println("Added " + recipe.name + " at " + mealDateTime.format(Config.FORMATTER_WEEK));
         }
     }
 
@@ -90,15 +90,15 @@ public class MealPlan {
             LocalDateTime mealDateTime = entry.getKey();
             Recipe recipe = entry.getValue();
             String line = String.format("%s,%s\n",
-                    mealDateTime.format(Agenda.FORMATTER_WEEK),
+                    mealDateTime.format(Config.FORMATTER_WEEK),
                     recipe.name);
             mealRecordOut.write(line.getBytes());
         }
         calendarOut.write("# Meal Plan\n\n".getBytes());
         calendarOut.write("## Meals\n\n".getBytes());
         calendarOut.write("The week from %s to %s.\n\n".formatted(
-                mealAgenda.firstKey().format(Agenda.FORMATTER_DATE),
-                mealAgenda.firstKey().plusDays(7).format(Agenda.FORMATTER_DATE))
+                mealAgenda.firstKey().format(Config.FORMATTER_DATE),
+                mealAgenda.firstKey().plusDays(7).format(Config.FORMATTER_DATE))
                 .getBytes());
         calendarOut.write(
                 "Changes in this section will only reflect in other sections after regenerating agenda with this markdown file.\n\n"

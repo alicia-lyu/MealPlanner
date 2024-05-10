@@ -1,18 +1,19 @@
-## Getting Started
+# Meal Planner Generator
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+## Get started
 
-## Folder Structure
+Minimal dependencies:
 
-The workspace contains two folders by default, where:
+- [OpenJDK 17](https://openjdk.java.net/projects/jdk/17/)
+- [Make](https://www.gnu.org/software/make/)
+- [Git](https://git-scm.com/)
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+It is also recommended to have the following installed:
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
+- [Any Markdown Viewer](https://www.typora.io/)
+- Any CSV Editor
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
+2 Steps to get started:
 
-## Dependency Management
-
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+- Clone this repository
+- Run `make` in the root directory: This will take the pre-existing sample [`agenda.md`](./lib/agenda.md), [`recipes.csv`](./lib/recipes.csv), and [`stock.csv`](./lib/stock.csv) to generate the meal planner in the `out` directory.

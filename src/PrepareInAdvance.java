@@ -45,7 +45,7 @@ public class PrepareInAdvance {
             LocalDateTime preparationTime = entry.getKey();
             if (preparationTime.toLocalDate().isAfter(lastDate)) { 
                 // Start a new h3
-                String agendaLine = String.format("\n### %s\n\n", preparationTime.format(Agenda.FORMATTER_DATE));
+                String agendaLine = String.format("\n### %s\n\n", preparationTime.format(Config.FORMATTER_DATE));
                 calendarOut.write(agendaLine.getBytes());
                 lastDate = preparationTime.toLocalDate();
             }
@@ -54,10 +54,10 @@ public class PrepareInAdvance {
             for (Map.Entry<String, Recipe> stepEntry : steps.entrySet()) {
                 String step = stepEntry.getKey();
                 Recipe recipe = stepEntry.getValue();
-                String recordLine = String.format("%s,%s,%s\n", preparationTime.format(Agenda.FORMATTER_WEEK), step, recipe.name);
+                String recordLine = String.format("%s,%s,%s\n", preparationTime.format(Config.FORMATTER_WEEK), step, recipe.name);
                 agendaRecordOut.write(recordLine.getBytes());
 
-                String line = String.format("- [ ] %s %s for %s\n", preparationTime.format(Agenda.FORMATTER_DAY), step, recipe.name);
+                String line = String.format("- [ ] %s %s for %s\n", preparationTime.format(Config.FORMATTER_DAY), step, recipe.name);
                 calendarOut.write(line.getBytes());
             }
         }
