@@ -150,4 +150,9 @@ public class Agenda {
             System.err.println(x);
         }
     }
+
+    public static void main(String[] args) throws Exception {
+        // Generate a empty template for a new agenda
+        // TODO
+    }
 }
