@@ -17,6 +17,7 @@ import java.util.Iterator;
 public class MealPlan {
     public TreeMap<LocalDateTime, Recipe> mealAgenda;
     private List<Recipe> recipes;
+    private LocalDate startDate;
 
     MealPlan(List<String> lines, List<Recipe> recipes) {
         this.recipes = recipes;
@@ -33,6 +34,9 @@ public class MealPlan {
                 case 1:
                     assert lineSegs[0].contains("-");
                     break;
+                case 2:
+                    Day day = Day.getDay(lineSegs[0]);
+                    startDate = Config.getDateOfNearestDay(day.value);
                 default:
                     parse(lineSegs);
             }
@@ -41,7 +45,7 @@ public class MealPlan {
 
     private void parse(String[] lineSegs) {
         Day day = Day.getDay(lineSegs[0]);
-        LocalDate date = Config.getDateOfNearestDay(day.value);
+        LocalDate date = Config.getDateOfNearestDay(day.value, startDate);
         for (int i = 1; i < lineSegs.length; i++) {
             Recipe recipe = null;
             for (Recipe r : recipes) {

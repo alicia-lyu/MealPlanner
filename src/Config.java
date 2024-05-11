@@ -21,6 +21,14 @@ public class Config {
         }
         return date.plusDays(daysToNearestDay);
     }
+    public static LocalDate getDateOfNearestDay(int dayOfWeek, LocalDate startDate) {
+        int currentDayOfWeek = startDate.getDayOfWeek().getValue();
+        int daysToNearestDay = dayOfWeek - currentDayOfWeek;
+        if (daysToNearestDay < 0) {
+            daysToNearestDay += 7;
+        }
+        return startDate.plusDays(daysToNearestDay);
+    }
 }
 
 enum Meal {

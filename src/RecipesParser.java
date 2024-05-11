@@ -17,8 +17,18 @@ public class RecipesParser {
         for (String line : lines) {
             String[] lineSegs = line.split("\s*,\s*");
             String name = lineSegs[0];
-            String[] ingredients = lineSegs[1].split("\s*;\s*");
-            Map<Duration, String> preparationSteps = parsePreparationSteps(lineSegs[2]);
+            String[] ingredients;
+            if (lineSegs.length > 1) {
+                ingredients = lineSegs[1].split("\s*;\s*");
+            } else {
+                ingredients = new String[0];
+            }
+            Map<Duration, String> preparationSteps;
+            if (lineSegs.length > 2) {
+                preparationSteps = parsePreparationSteps(lineSegs[2]);
+            } else {
+                preparationSteps = new HashMap<>();
+            }
             Recipe r = new Recipe(name, Arrays.asList(ingredients), preparationSteps);
             recipes.add(r);
         }
